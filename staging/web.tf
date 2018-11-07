@@ -1,3 +1,4 @@
+/*
 module "web" {
   source              = "../modules/web"
   web_instance_count  = "${var.web_instance_count}"
@@ -11,3 +12,4 @@ module "web" {
   vpc_id              = "${module.networking.vpc_id}"
   vpc_cidr_block      = "${var.vpc_cidr}"
 }
+*/

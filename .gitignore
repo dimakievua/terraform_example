@@ -1,2 +1,3 @@
 staging/terraform.tfstate*
 */.terraform
+*/*.pem

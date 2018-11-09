@@ -1,7 +1,7 @@
 variable "vpc_cidr" {
   description = "The CIDR block of the VPC"
 }
-/*
+
 variable "public_subnet_cidr" {
   description = "The CIDR block for the public subnet"
 }
@@ -9,7 +9,7 @@ variable "public_subnet_cidr" {
 variable "private_subnet_cidr" {
   description = "The CIDR block for the private subnet"
 }
-*/
+
 variable "environment" {
   description = "The environment"
 }
@@ -17,7 +17,8 @@ variable "environment" {
 variable "region" {
   description = "The region to launch the bastion host"
 }
-/*
+/* 
+# Fetched from aws_vpc data source
 variable "availability_zone" {
   description = "The az that the resources will be launched"
 }
@@ -29,9 +30,8 @@ variable "bastion_ami" {
     "us-west-1" = "ami-16efb076"
   }
 }
-
+*/
 variable "key_name" {
   description = "The public key for the bastion host"
 }
 
-*/

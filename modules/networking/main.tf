@@ -12,33 +12,15 @@ resource "aws_vpc" "vpc" {
   }
 }
 
-/* Internet gateway for the public subnet 
-resource "aws_internet_gateway" "ig" {
-  vpc_id = "${aws_vpc.vpc.id}"
+# Declare the data source
+data "aws_availability_zones" "available" {}
 
-  tags {
-    Name        = "${var.environment}-igw"
-    Environment = "${var.environment}"
-  }
-}
-
-
-/* Elastic IP for NAT 
-resource "aws_eip" "nat_eip" {
-  vpc = true
-}
-
-/* NAT 
-resource "aws_nat_gateway" "nat" {
-  allocation_id = "${aws_eip.nat_eip.id}"
-  subnet_id     = "${aws_subnet.public_subnet.id}"
-}
-
-/* Public subnet 
+# Public subnet 
+# e.g. Create subnets in the first two available availability zones  
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = "${aws_vpc.vpc.id}"
   cidr_block              = "${var.public_subnet_cidr}"
-  availability_zone       = "${var.availability_zone}"
+  availability_zone       = "${data.aws_availability_zones.available.names[0]}"
   map_public_ip_on_launch = true
 
   tags {
@@ -47,12 +29,12 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-/* Private subnet 
+# Private subnet 
 resource "aws_subnet" "private_subnet" {
   vpc_id                  = "${aws_vpc.vpc.id}"
   cidr_block              = "${var.private_subnet_cidr}"
   map_public_ip_on_launch = false
-  availability_zone       = "${var.availability_zone}"
+  availability_zone       = "${data.aws_availability_zones.available.names[1]}"
 
   tags {
     Name        = "${var.environment}-private-subnet"
@@ -60,7 +42,7 @@ resource "aws_subnet" "private_subnet" {
   }
 }
 
-/* Routing table for private subnet 
+# Routing table for private subnet 
 resource "aws_route_table" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
 
@@ -70,12 +52,22 @@ resource "aws_route_table" "private" {
   }
 }
 
-/* Routing table for public subnet 
+# Routing table for public subnet 
 resource "aws_route_table" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
 
   tags {
     Name        = "${var.environment}-public-route-table"
+    Environment = "${var.environment}"
+  }
+}
+
+# Internet gateway for the public subnet 
+resource "aws_internet_gateway" "ig" {
+  vpc_id = "${aws_vpc.vpc.id}"
+
+  tags {
+    Name        = "${var.environment}-igw"
     Environment = "${var.environment}"
   }
 }
@@ -86,24 +78,7 @@ resource "aws_route" "public_internet_gateway" {
   gateway_id             = "${aws_internet_gateway.ig.id}"
 }
 
-resource "aws_route" "private_nat_gateway" {
-  route_table_id         = "${aws_route_table.private.id}"
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = "${aws_nat_gateway.nat.id}"
-}
-
-/* Route table associations 
-resource "aws_route_table_association" "public" {
-  subnet_id      = "${aws_subnet.public_subnet.id}"
-  route_table_id = "${aws_route_table.public.id}"
-}
-
-resource "aws_route_table_association" "private" {
-  subnet_id       = "${aws_subnet.private_subnet.id}"
-  route_table_id  = "${aws_route_table.private.id}"
-}
-
-/* Default security group 
+# Default security group 
 resource "aws_security_group" "default" {
   name        = "${var.environment}-default-sg"
   description = "Default security group to allow inbound/outbound from the VPC"
@@ -126,6 +101,36 @@ resource "aws_security_group" "default" {
   tags {
     Environment = "${var.environment}"
   }
+}
+
+/* Route table associations 
+resource "aws_route_table_association" "public" {
+  subnet_id      = "${aws_subnet.public_subnet.id}"
+  route_table_id = "${aws_route_table.public.id}"
+}
+
+
+/* Elastic IP for NAT 
+resource "aws_eip" "nat_eip" {
+  vpc = true
+}
+
+/* NAT 
+resource "aws_nat_gateway" "nat" {
+  allocation_id = "${aws_eip.nat_eip.id}"
+  subnet_id     = "${aws_subnet.public_subnet.id}"
+}
+
+resource "aws_route" "private_nat_gateway" {
+  route_table_id         = "${aws_route_table.private.id}"
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = "${aws_nat_gateway.nat.id}"
+}
+
+/* Route table associations 
+resource "aws_route_table_association" "private" {
+  subnet_id       = "${aws_subnet.private_subnet.id}"
+  route_table_id  = "${aws_route_table.private.id}"
 }
 
 resource "aws_security_group" "bastion" {

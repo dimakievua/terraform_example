@@ -1,3 +1,4 @@
 staging/terraform.tfstate*
 */.terraform
 */*.pem
+*/converted.ppk

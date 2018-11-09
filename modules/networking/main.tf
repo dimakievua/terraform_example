@@ -103,7 +103,7 @@ resource "aws_security_group" "default" {
   }
 }
 
-/* Route table associations 
+# Route table associations 
 resource "aws_route_table_association" "public" {
   subnet_id      = "${aws_subnet.public_subnet.id}"
   route_table_id = "${aws_route_table.public.id}"
@@ -132,7 +132,7 @@ resource "aws_route_table_association" "private" {
   subnet_id       = "${aws_subnet.private_subnet.id}"
   route_table_id  = "${aws_route_table.private.id}"
 }
-
+*/
 resource "aws_security_group" "bastion" {
   vpc_id      = "${aws_vpc.vpc.id}"
   name        = "${var.environment}-bastion-host"
@@ -165,8 +165,22 @@ resource "aws_security_group" "bastion" {
   }
 }
 
+data "aws_ami" "amazon-linux-2" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm*"]
+  }
+}
+
 resource "aws_instance" "bastion" {
-  ami                         = "${lookup(var.bastion_ami, var.region)}"
+  ami                         = "${data.aws_ami.amazon-linux-2.id}"
   instance_type               = "t2.micro"
   key_name                    = "${var.key_name}"
   monitoring                  = true
@@ -179,4 +193,3 @@ resource "aws_instance" "bastion" {
     Environment = "${var.environment}"
   }
 }
-*/
